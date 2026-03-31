@@ -1,93 +1,53 @@
 # Torongoo Customer Support Hub (CSH)
 
-A modern, responsive React web application designed for customer support agents to quickly find and copy reply scripts for specific products.
+A modern React workspace for support agents to search products, open prebuilt replies, and copy responses quickly.
 
-## 🚀 Features
+## Features
 
-- **Product Dashboard**: Browse all products with beautiful card layouts
-- **Global Search**: Search products by name, category, or script content
-- **Quick Copy**: One-click copying of reply scripts to clipboard
-- **Mobile-First Design**: Optimized for mobile use (WhatsApp/Messenger)
-- **Toast Notifications**: Visual feedback when scripts are copied
-- **Responsive Layout**: Works seamlessly on all devices
+- CSV-powered product source (`wc-product-export-31-3-2026-1774959409005.csv`)
+- Modern card/list view with product images and stock status
+- Global search across product name, category, prices, and script content
+- Category chips, sorting controls, and clear filters
+- Quick-copy on cards and copy-all from the product modal
+- Responsive design for desktop and mobile support workflows
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **Framework**: React 18 with Vite
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Notifications**: React Hot Toast
+- React + Vite
+- Tailwind CSS
+- Lucide React icons
+- React Hot Toast
 
-## 📦 Installation
+## Run locally
 
-1. Install dependencies:
 ```bash
 npm install
-```
-
-2. Start the development server:
-```bash
 npm run dev
 ```
 
-3. Open your browser and navigate to the URL shown in the terminal (usually `http://localhost:5173`)
+Build for production:
 
-## 🎨 Product Categories
-
-- **Decor**: Decorative items like mirrors and lanterns
-- **Gadget**: Tech gadgets and accessories
-- **Lighting**: Lamps and light accessories
-
-## 📱 Usage
-
-1. **Browse Products**: View all products on the main dashboard
-2. **Search**: Use the search bar to filter products or find specific scripts
-3. **View Scripts**: Click any product card to see all reply scripts
-4. **Copy**: Click the "Copy" button next to any script to copy it to your clipboard
-5. **Paste**: Switch to your messaging app and paste the reply
-
-## 🎯 Search Tips
-
-- Search by product name: "Bunny", "Torch", "Mirror"
-- Search by category: "Gadget", "Decor", "Lighting"
-- Search by script topic: "Price", "Color", "Gift"
-
-## 🏗️ Project Structure
-
-```
-torongoo-csh/
-├── src/
-│   ├── components/
-│   │   ├── ProductCard.jsx
-│   │   ├── SearchBar.jsx
-│   │   └── ProductDetailModal.jsx
-│   ├── data/
-│   │   └── products.js
-│   ├── App.jsx
-│   ├── main.jsx
-│   └── index.css
-├── index.html
-├── package.json
-├── tailwind.config.js
-├── postcss.config.js
-└── vite.config.js
+```bash
+npm run build
 ```
 
-## 🎨 Brand Colors
+## Data source
 
-- Primary (Torongoo Blue): `#0084FF`
-- Secondary (Black): `#1A1A1A`
-- Background (White): `#FFFFFF`
-- Surface (Light Gray): `#F4F6F8`
-- Accent Warm (Golden Glow): `#FFC107`
-- Accent Soft (Bunny Pink): `#FFB6C1`
-- Accent Tech (Cyber Cyan): `#00E5FF`
+Product data is generated at runtime from `wc-product-export-31-3-2026-1774959409005.csv` in `src/data/products.js`.
 
-## 📄 License
+- `simple` and `variable` records become product cards
+- `variation` rows are merged into parent products for option/price ranges
+- Support scripts are auto-generated from CSV descriptions
+
+## Brand theme
+
+Primary theme color: `#2596be`
+
+Used in:
+- `tailwind.config.js`
+- `src/index.css`
+- `index.html` (`meta theme-color`)
+
+## License
 
 Private - Torongoo Internal Use Only
-
-## 👨‍💻 Development
-
-Built with ❤️ for Torongoo Customer Support Team
-

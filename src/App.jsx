@@ -1,97 +1,161 @@
-import React, { useState, useMemo } from 'react';
-import { Toaster } from 'react-hot-toast';
+import React, { useMemo, useState } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
+import { Grid3X3, LayoutList } from 'lucide-react';
 import SearchBar from './components/SearchBar';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
 import { products } from './data/products';
-import { Package } from 'lucide-react';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [sortBy, setSortBy] = useState('name-asc');
+  const [viewMode, setViewMode] = useState('grid');
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Filter products based on search query
+  const categories = useMemo(() => {
+    const categorySet = new Set(products.map((product) => product.category));
+    return ['All', ...Array.from(categorySet).sort((a, b) => a.localeCompare(b))];
+  }, []);
+
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return products;
-    }
+    const query = searchQuery.trim().toLowerCase();
 
-    const query = searchQuery.toLowerCase();
+    let nextProducts = products.filter((product) => {
+      const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+      if (!matchesCategory) {
+        return false;
+      }
 
-    return products.filter(product => {
-      // Search in product name
-      if (product.name.toLowerCase().includes(query)) {
+      if (!query) {
         return true;
       }
 
-      // Search in category
-      if (product.category.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      // Search in price
-      if (product.price.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      // Search in script questions and answers
-      return product.scripts.some(script =>
-        script.question.toLowerCase().includes(query) ||
-        script.answer.toLowerCase().includes(query)
+      return (
+        product.name.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query) ||
+        product.price.toLowerCase().includes(query) ||
+        product.scripts.some(
+          (script) =>
+            script.question.toLowerCase().includes(query) ||
+            script.answer.toLowerCase().includes(query),
+        )
       );
     });
-  }, [searchQuery]);
+
+    nextProducts = [...nextProducts].sort((a, b) => {
+      if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
+      if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
+      if (sortBy === 'scripts-desc') return b.scripts.length - a.scripts.length;
+      if (sortBy === 'scripts-asc') return a.scripts.length - b.scripts.length;
+      return 0;
+    });
+
+    return nextProducts;
+  }, [searchQuery, selectedCategory, sortBy]);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('All');
+    setSortBy('name-asc');
+  };
+
+  const handleQuickCopy = async (product) => {
+    if (!product.scripts?.length) return;
+
+    try {
+      await navigator.clipboard.writeText(product.scripts[0].answer);
+      toast.success(`Copied quick reply for ${product.name}`);
+    } catch (error) {
+      toast.error('Clipboard permission blocked. Please copy from details.');
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-surface">
-      <Toaster />
+    <div className="min-h-screen bg-surface text-secondary">
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,#3bbba514,transparent_55%),radial-gradient(ellipse_at_bottom,#0a7d8914,transparent_60%)]" />
+      <Toaster
+        toastOptions={{
+          style: {
+            borderRadius: '12px',
+            background: '#0a7d89',
+            color: '#ffffff',
+          },
+        }}
+      />
 
-      {/* Header */}
-      <header className="bg-gradient-to-r from-primary to-accent-tech text-white py-6 md:py-8 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-2">
-            <Package size={32} className="md:w-10 md:h-10" />
-            <h1 className="text-2xl md:text-4xl font-bold">Torongoo CSH</h1>
-          </div>
-          <p className="text-white/90 text-sm md:text-base">Customer Support Hub - Quick Reply Scripts</p>
+      <header className="sticky top-0 z-40 border-b border-primary/10 bg-white/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl justify-center px-4 py-4 md:py-5">
+          <img
+            src="/logo_colourful.png"
+            alt="Torongoo"
+            className="h-11 w-auto max-w-[220px] object-contain md:h-14 md:max-w-[300px]"
+          />
         </div>
       </header>
 
-      {/* Search Bar */}
-      <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <SearchBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        categories={categories}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        onClear={clearFilters}
+      />
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6 md:py-8">
-        {/* Results Info */}
-        {searchQuery && (
-          <div className="mb-6">
-            <p className="text-secondary/70 text-sm md:text-base">
-              Found <span className="font-bold text-primary">{filteredProducts.length}</span> result(s) for "{searchQuery}"
-            </p>
+      <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/15 bg-white/90 p-4 shadow-soft backdrop-blur">
+          <p className="text-sm text-secondary/80 md:text-base">
+            Showing <span className="font-semibold text-primary">{filteredProducts.length}</span> of {products.length} products
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`rounded-lg p-2 transition ${
+                viewMode === 'grid' ? 'bg-primary text-white' : 'bg-surface text-secondary hover:bg-primary/10'
+              }`}
+              aria-label="Grid view"
+            >
+              <Grid3X3 size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`rounded-lg p-2 transition ${
+                viewMode === 'list' ? 'bg-primary text-white' : 'bg-surface text-secondary hover:bg-primary/10'
+              }`}
+              aria-label="List view"
+            >
+              <LayoutList size={18} />
+            </button>
           </div>
-        )}
+        </div>
 
-        {/* Products Grid */}
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            {filteredProducts.map(product => (
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6' : 'space-y-4'}>
+            {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
+                viewMode={viewMode}
                 onClick={setSelectedProduct}
+                onQuickCopy={handleQuickCopy}
               />
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 md:py-24">
-            <div className="text-6xl md:text-8xl mb-4">🔍</div>
-            <h3 className="text-xl md:text-2xl font-bold text-secondary mb-2">No products found</h3>
-            <p className="text-secondary/60">Try searching with different keywords</p>
+          <div className="rounded-2xl border border-dashed border-primary/25 bg-white/85 py-16 text-center backdrop-blur">
+            <div className="mb-4 text-5xl">🔎</div>
+            <h3 className="text-xl font-semibold">No products found</h3>
+            <p className="mt-1 text-secondary/65">Try another keyword or clear filters.</p>
           </div>
         )}
       </main>
 
-      {/* Product Detail Modal */}
       {selectedProduct && (
         <ProductDetailModal
           product={selectedProduct}

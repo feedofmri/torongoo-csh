@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, Tag } from 'lucide-react';
+import { Check, Copy, Tag, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ProductDetailModal = ({ product, onClose }) => {
@@ -9,60 +9,75 @@ const ProductDetailModal = ({ product, onClose }) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedId(id);
-      toast.success('Copied to clipboard!', {
-        duration: 2000,
+      toast.success('Copied to clipboard', {
+        duration: 1800,
         position: 'bottom-center',
-        style: {
-          background: '#0084FF',
-          color: '#fff',
-          borderRadius: '12px',
-          padding: '12px 24px',
-          fontSize: '16px',
-          fontWeight: '600',
-        },
       });
 
       setTimeout(() => {
         setCopiedId(null);
-      }, 2000);
-    } catch (err) {
-      toast.error('Failed to copy');
+      }, 1400);
+    } catch (error) {
+      toast.error('Failed to copy text');
     }
+  };
+
+  const handleCopyAll = async () => {
+    const bundle = product.scripts
+      .map((script) => `${script.question}\n${script.answer}`)
+      .join('\n\n---\n\n');
+
+    handleCopy(bundle, 'all');
   };
 
   if (!product) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center">
+      <button type="button" className="absolute inset-0 bg-black/55 backdrop-blur-sm" onClick={onClose} aria-label="Close modal" />
 
-      {/* Modal */}
-      <div className="relative bg-white w-full md:max-w-3xl md:mx-4 rounded-t-3xl md:rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col animate-slide-up">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-primary to-accent-tech p-6 text-white relative">
+      <div className="relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white/95 shadow-2xl animate-fade-in md:mx-4 md:max-w-4xl md:rounded-3xl backdrop-blur">
+        <header className="bg-gradient-to-r from-primary to-accent-warm p-5 text-white md:p-6">
           <button
+            type="button"
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute right-4 top-4 rounded-full p-2 transition hover:bg-white/15"
+            aria-label="Close"
           >
-            <X size={24} />
+            <X size={22} />
           </button>
 
           <div className="pr-12">
-            <h2 className="text-2xl font-bold mb-2">{product.name}</h2>
-            <div className="flex items-center gap-2 text-white/90">
-              <Tag size={18} />
-              <span className="text-lg font-semibold">{product.price}</span>
+            <h2 className="mb-2 text-xl font-bold md:text-2xl">{product.name}</h2>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-white/90 md:text-base">
+              <span className="inline-flex items-center gap-1.5 font-semibold">
+                <Tag size={16} />
+                {product.price}
+              </span>
+              <span className="rounded-full bg-white/15 px-2 py-1 text-xs md:text-sm">{product.category}</span>
+              <span className="rounded-full bg-white/15 px-2 py-1 text-xs md:text-sm">{product.stock}</span>
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Scripts List */}
-        <div className="overflow-y-auto flex-1 p-4 md:p-6">
-          <h3 className="text-lg font-bold text-secondary mb-4">Reply Scripts</h3>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          {product.image && (
+            <div className="mb-5 overflow-hidden rounded-2xl border border-primary/15 bg-surface">
+              <img src={product.image} alt={product.name} className="h-52 w-full object-cover md:h-64" />
+            </div>
+          )}
+
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h3 className="text-lg font-semibold">Support scripts</h3>
+            <button
+              type="button"
+              onClick={handleCopyAll}
+              className="inline-flex items-center gap-2 rounded-lg border border-primary/20 px-3 py-2 text-sm font-medium text-secondary transition hover:bg-primary/10"
+            >
+              <Copy size={15} />
+              Copy all
+            </button>
+          </div>
 
           <div className="space-y-4">
             {product.scripts.map((script, index) => {
@@ -70,54 +85,36 @@ const ProductDetailModal = ({ product, onClose }) => {
               const isCopied = copiedId === scriptId;
 
               return (
-                <div
-                  key={index}
-                  className="bg-surface rounded-xl p-4 md:p-5 border-2 border-transparent hover:border-primary/30 transition-all"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <h4 className="font-semibold text-secondary text-base md:text-lg flex-1">
-                      {script.question}
-                    </h4>
+                <section key={scriptId} className="rounded-xl border border-primary/10 bg-white/75 p-4 md:p-5 shadow-soft">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <h4 className="text-sm font-semibold text-secondary md:text-base">{script.question}</h4>
                     <button
+                      type="button"
                       onClick={() => handleCopy(script.answer, scriptId)}
-                      className={`flex-shrink-0 px-4 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-all transform active:scale-95 flex items-center gap-2 text-sm md:text-base ${
-                        isCopied
-                          ? 'bg-green-500 text-white'
-                          : 'bg-primary text-white hover:bg-primary/90'
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                        isCopied ? 'bg-green-600 text-white' : 'bg-primary text-white hover:bg-primary/90'
                       }`}
                     >
-                      {isCopied ? (
-                        <>
-                          <Check size={20} />
-                          <span>Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={20} />
-                          <span>Copy</span>
-                        </>
-                      )}
+                      {isCopied ? <Check size={16} /> : <Copy size={16} />}
+                      {isCopied ? 'Copied' : 'Copy'}
                     </button>
                   </div>
-
-                  <div className="text-secondary/80 whitespace-pre-line text-sm md:text-base leading-relaxed">
-                    {script.answer}
-                  </div>
-                </div>
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-secondary/85 md:text-base">{script.answer}</p>
+                </section>
               );
             })}
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200 p-4 bg-white">
+        <footer className="border-t border-primary/10 p-4">
           <button
+            type="button"
             onClick={onClose}
-            className="w-full py-3 md:py-4 bg-secondary text-white rounded-xl font-semibold text-base md:text-lg hover:bg-secondary/90 transition-colors"
+            className="w-full rounded-xl bg-secondary px-4 py-3 font-semibold text-white transition hover:bg-secondary/90"
           >
             Close
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   );
